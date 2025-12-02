@@ -29,6 +29,6 @@ def analyze(
 
 
 def print_report(out: dict):
-print(f"[+] File: {out.get('path')}")
-print(f"[+] Sample rate: {out.get('sr')} Hz | Channels: {out.get('channels')} | Bitdepth: {out.get('bitdepth')}")
+  print(f"[+] File: {out.get('path')}")
+  print(f"[+] Sample rate: {out.get('sr')} Hz | Channels: {out.get('channels')} | Bitdepth: {out.get('bitdepth')}")
 app()
