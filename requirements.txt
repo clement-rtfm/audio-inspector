@@ -1,0 +1,11 @@
+numpy
+scipy
+librosa
+soundfile
+matplotlib
+typer[all]
+tqdm
+python-dotenv
+
+
+audioread
