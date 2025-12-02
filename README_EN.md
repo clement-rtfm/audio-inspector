@@ -5,6 +5,8 @@ Comprehensive audio analyzer: detects fake FLACs, generates spectrograms, calcul
 A CLI tool designed for audiophiles, archivists, music collectors, and engineers who want to verify the authenticity and quality of audio files.
 
 ---
+For the French version, see [README in French](README_FR.md).
+---
 
 ## 🚀 Key Features
 - **Fake FLAC / Upscaled MP3 detection** (analyzes lowpass and high-frequency energy)
