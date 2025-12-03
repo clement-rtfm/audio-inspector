@@ -1,202 +1,118 @@
-
 # audio-inspector
 
-A complete audio analysis tool: fake FLAC detection, spectrograms, dynamic metrics, and JSON reporting.
+Complete audio analyzer: detects fake FLAC files, generates spectrograms, dynamic range metrics, and provides a JSON report.
 
 A CLI tool designed for audiophiles, archivists, music collectors, and engineers who want to verify the authenticity and quality of an audio file.
 
----
-Pour la version française, voir **[README en français](README.md)**.
+--- Pour la version francaise, voir [README en francais](README.md).
+
 ---
 
 ## 🚀 Main Features
-- **Fake FLAC / upscaled MP3 detection** (lowpass analysis + high-frequency energy)
-- **High-quality spectrograms** exported as PNG
+- **Detection of fake upscaled FLAC/MP3 files** (lowpass and high-frequency energy analysis)
+- **High-quality spectrograms** exported as PNGs
 - **Essential audio metrics**: RMS, peak, estimated DR
 - **Wide compatibility**: FLAC, WAV, MP3, OGG, AAC (via `librosa` + `soundfile`)
-- **JSON export** for metrics
-- **Simple, clean CLI** powered by `typer`
+- **JSON export** of metrics
+- **Simple and clean CLI** with `typer`
 
 ---
 
 ## 📦 Installation (Windows, Linux, macOS)
 
-### 1) Clone the repository
-```bash
-git clone https://github.com/clement-rtfm/audio-inspector.git
-cd audio-inspector
+### PIP
+````bash
+pip install -i https://test.pypi.org/simple --extra-index-url https://pypi.org/simple audio-inspector==0.1.0
 ````
-
-### 🐍 2) Create a Python virtual environment
-
-* 🔹 Linux / macOS
-
-```bash
-python3 -m venv .venv
-# then
-source .venv/bin/activate
-```
-
-* 🔹 Windows (PowerShell)
-
-```bash
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-
-* 🔹 Windows (CMD)
-
-```bash
-python -m venv .venv
-.\.venv\Scripts\activate.bat
-```
-
-Make sure the virtual environment is active:
-your terminal prompt should start with `(.venv)`.
-
-### 📚 3) Install dependencies
-
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-**⚠️ Possible system dependencies**
-
-Depending on your OS, you may need to install additional libraries:
-
-* Linux (Debian, Ubuntu, Mint…)
-
-```bash
-sudo apt install ffmpeg libsndfile1 libasound2
-```
-
-* Arch / Manjaro
-
-```bash
-sudo pacman -S ffmpeg libsndfile alsa-lib
-```
-
-* Fedora
-
-```bash
-sudo dnf install ffmpeg libsndfile alsa-lib
-```
-
-* macOS (Homebrew)
-
-```bash
-brew install ffmpeg libsndfile
-```
-
-* Windows
-  No package manager installation required.
-
-`ffmpeg` is recommended for improved analysis:
-→ download the Windows build from ffmpeg.org and add the `bin/` folder to your PATH.
 
 ---
 
-## 🧪 Quick Usage
+## 🧪 Usage Quick
 
-### Basic analysis
-
+### Simple Analysis
 ```bash
-python cli.py music.flac
+audio-inspector "path/music.flac"
 ```
-
-### Analysis + spectrogram export
-
+### Analysis + Spectrogram Export
 ```bash
-python cli.py music.flac --plot
+audio-inspector "path/music.flac" --plot
 ```
-
-This generates:
-
+→ Automatically generates:
 ```bash
 out/music_spectrogram.png
 ```
-
-### Analysis + JSON export (for automation or scripting)
-
+### Analysis + JSON Export (for automation or integration into a script)
 ```bash
-python cli.py music.flac --json out/report.json
+audio-inspector "path/music.flac" --json out/report.json
+```
+### All at the same time (spectrogram + JSON + terminal log)
+```bash
+audio-inspector "path/music.flac" --plot --json out/report.json --verbose
 ```
 
-### Full analysis (spectrogram + JSON + terminal log)
-
-```bash
-python cli.py music.flac --plot --json out/report.json --verbose
-```
-
----
-
-## 📝 Example terminal output
-
+## 📝 Terminal Output Example
 ```bash
 [+] File: music.flac
 [+] Sample rate: 44100 Hz | Channels: 2 | Bitdepth: 24
 [+] RMS: -15.23 dB | Peak: -1.40 dB
 [+] DR (est.): 13.8
-[!] Lowpass detected at ~16500 Hz → possible upscaled lossy source
+[!] Lowpass detected at ~16500 Hz → possible upscaled lossy
 [+] FLAC purity score: 32/100
 Spectrogram saved to out/music_spectrogram.png
 ```
 
----
+## 🧠 How does fake FLAC detection work?
+Detection relies on several combined audio analyses to identify the typical characteristics of a **lossy file re-encoded in FLAC (fake FLAC).**
+The script is not based on the **bitrate**, but on signatures in the spectrum.
 
-## 🧠 How fake FLAC detection works
+### 🔍 1) Spectral Analysis via STFT
+The file is divided into time windows and then transformed into a spectrogram (STFT).
 
-The detection is based on multiple combined audio analyses to identify the typical characteristics of a **lossy file re-encoded as FLAC (fake FLAC)**.
-The script does **not** rely on bitrate, but on spectral signatures.
+This allows us to observe:
 
-### 🔍 1) Spectral analysis via STFT
+- the frequency distribution,
 
-The file is split into time windows, then transformed into a spectrogram (STFT).
-This reveals:
+- the energy in the high frequencies,
 
-* the frequency distribution
-* the high-frequency energy
-* abnormal cutoffs or spectral gaps
+- any abnormal cutoffs.
 
-### ✂️ 2) Detection of lossy lowpass cutoffs
-
-Lossy codecs remove most energy above:
-
-* ~16 kHz (MP3 320)
-* ~18–19 kHz (AAC)
-* ~15 kHz (lower MP3 VBR)
-
+### ✂️ 2) Detection of a Lossy Cutoff
+MP3/AAC formats remove energy beyond:
+- ~16 kHz (MP3 320)
+- ~18–19 kHz (AAC)
+- ~15 kHz (lower VBR)
 The script looks for:
+- a sharp drop in the spectrum in the high frequencies,
 
-* a **sharp drop** in high-frequency content
-* a transition too clean to come from a true lossless master
+- a transition too abrupt to be a lossless master.
 
-This is the primary indicator of a fake FLAC.
+This is the main indicator of a fake FLAC.
 
-### ⚖️ 3) Computing the “FLAC Purity Score”
+### ⚖️ 3) Calculating a “FLAC Purity Score”
+This tool measures the residual energy above a threshold (by default ~16 kHz).
 
-The tool measures the residual high-frequency energy above a threshold (default: ~16 kHz).
-It evaluates:
+It weights:
 
-* amount of HF energy
-* spectral smoothness
-* presence of lossy artifacts (holes, smearing, HF noise patterns)
+- the amount of energy,
 
-It outputs a normalized score:
+- the regularity of the spectrum,
 
-```
+- the presence of lossy artifacts (blemishes, holes, artificial high-frequency noise).
+
+It produces a typical score:
+````bash
 0.0 → very likely lossy
 1.0 → very likely true FLAC
-```
+````
 
-### 📊 4) Probabilistic indicator
+### 📊 4) Probabilistic Indicator
+The detection is never absolute:
 
-Detection is **never absolute**.
-It provides a probability, useful to:
+it provides a probability, useful for:
 
-* verify entire libraries
-* detect fake files downloaded online
-* compare different editions of the same album
+- verifying complete collections,
 
-It’s not a definitive judgment, but a powerful **quality filter**.
+- detecting fake files downloaded from the internet,
+
+- comparing several versions of the same album.
+It is not a definitive judge, but a very good quality filter.
