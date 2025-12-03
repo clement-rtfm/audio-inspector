@@ -1,28 +1,56 @@
-from pathlib import Path
 import typer
-from audioinspector.analysis import analyze_file, print_report
+from pathlib import Path
 import json
+from audioinspector.analysis import analyze_file
 
-app = typer.Typer(help="Audio Inspector CLI")
+app = typer.Typer(help="Audio Inspector – analyze audio files like a pro")
+
 
 @app.command()
 def analyze(
-    infile: Path = typer.Argument(..., exists=True, file_okay=True, dir_okay=False),
-    plot: bool = typer.Option(False, "--plot", help="Exporter le spectrogramme PNG"),
-    json_out: Path = typer.Option(None, "--json", help="Chemin du fichier JSON de sortie"),
-    verbose: bool = typer.Option(True, "--verbose", help="Afficher le rapport dans le terminal"),
+    infile: Path = typer.Argument(..., exists=True),
+    plot: bool = typer.Option(False, "--plot", help="Generate a spectrogram PNG"),
+    json_out: Path = typer.Option(None, "--json", help="Export results to JSON"),
 ):
-    """Analyse un fichier audio et génère un rapport"""
+    """
+    Analyze an audio file and print a detailed report.
+    """
+    typer.echo(f"[+] Analyzing: {infile} …")
     out = analyze_file(str(infile), plot=plot)
-    
+
+    # PRINT REPORT
+    print_report(out)
+
+    # WRITE JSON IF NEEDED
     if json_out:
         json_out.parent.mkdir(parents=True, exist_ok=True)
-        with open(json_out, 'w', encoding='utf8') as f:
-            json.dump(out, f, ensure_ascii=False, indent=2)
-    
-    if verbose:
-        print_report(out)
+        json_out.write_text(json.dumps(out, indent=4))
+        typer.echo(f"[+] JSON exported to {json_out}")
 
-# ✅ Le point d'entrée pour Typer
+
+def print_report(out: dict):
+    print("")
+    print("========== AUDIO REPORT ==========")
+    print(f"File: {out.get('path')}")
+    print(f"Sample rate: {out.get('samplerate')} Hz")
+    print(f"Channels: {out.get('channels')}")
+    print(f"Bit depth: {out.get('bitdepth')}")
+    print("")
+    print(f"RMS: {out.get('rms'):.2f} dB")
+    print(f"Peak: {out.get('peak'):.2f} dB")
+    print(f"DR (est.): {out.get('dr'):.1f}")
+    print("")
+    if out.get("lowpass"):
+        print(f"[!] Lowpass detected around {out['lowpass']} Hz → possible lossy upscale.")
+    else:
+        print("[+] No lowpass detected.")
+    print(f"FLAC Integrity Score: {out.get('flac_score')}/100")
+    print("")
+    if out.get("spectrogram_path"):
+        print(f"[+] Spectrogram saved to: {out['spectrogram_path']}")
+
+    print("==================================")
+
+
 if __name__ == "__main__":
     app()
