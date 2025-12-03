@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "audio-inspector"
+version = "0.1.0"
+description = "Audio analysis tool for spectrograms, dynamic metrics, and FLAC authenticity detection."
+authors = [{ name = "Clément", email = "example@example.com" }]
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "librosa",
+    "typer",
+]
+
+[project.scripts]
+audio-inspector = "audioinspector.cli:main"
