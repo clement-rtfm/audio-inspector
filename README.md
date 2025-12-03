@@ -116,7 +116,48 @@ Spectrogram saved to out/musique_spectrogram.png
 
 
 ## 🧠 Comment fonctionne la détection de faux FLAC ?
-- Analyse du spectre moyen via STFT
-- Recherche d’un cutoff brutal typique d’un encodage lossy (MP3/AAC)
-- Calcul d’un FLAC purity score basé sur l’énergie au-dessus de 16 kHz
-- Indication probabiliste, non absolue : utile pour vérifier des bibliothèques entières
+La détection repose sur plusieurs analyses audio combinées pour repérer les caractéristiques typiques d’un fichier **lossy ré-encodé en FLAC (faux FLAC).**
+Le script ne se base pas sur le **bitrate**, mais sur des signatures dans le spectre.
+
+### 🔍 1) Analyse spectrale via STFT
+Le fichier est découpé en fenêtres temporelles, puis transformé en spectrogramme (STFT).  
+Cela permet d’observer :
+- la répartition fréquentielle,
+- l’énergie dans les hautes fréquences,
+- les coupures anormales.
+
+### ✂️ 2) Détection d’un “cutoff” lossy
+Les formats MP3/AAC suppriment l’énergie au-delà :
+- ~16 kHz (MP3 320)
+- ~18–19 kHz (AAC)
+- ~15 kHz (VBR plus bas)
+Le script recherche :
+- un effondrement brutal du spectre dans les hautes fréquences,
+- une transition trop nette pour être un master lossless.
+C’est l’indicateur principal d’un faux FLAC.
+
+### ⚖️ 3) Calcul d’un “FLAC Purity Score”
+L’outil mesure l’énergie résiduelle au-dessus d’un seuil (par défaut ~16 kHz).  
+Il pondère :
+- la quantité d’énergie,
+- la régularité du spectre,
+- la présence d’artefacts lossy (bavures, trous, bruit de haute fréquence artificiel).  
+Il produit une note typée :
+````bash
+0.0 → très probablement lossy
+1.0 → très probablement vrai FLAC
+````
+
+### 📊 4) Indicateur probabiliste
+La détection n’est jamais absolue :  
+elle donne une probabilité, utile pour :
+- vérifier des collections complètes,
+- détecter les faux fichiers récupérés sur Internet,
+- comparer plusieurs versions d’un même album.
+Ce n’est pas un juge définitif, mais un très bon filtre de qualité.
+
+
+
+
+
+
