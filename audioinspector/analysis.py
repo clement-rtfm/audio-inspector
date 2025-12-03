@@ -1,70 +1,98 @@
-from pathlib import Path
 import soundfile as sf
 import numpy as np
-import librosa
-from .utils import dbfs, peak_db, ensure_mono
-from .spectrogram import save_spectrogram
-from .detector import detect_lowpass
+import os
+from .spectrogram import generate_spectrogram
 
 
-def guess_bitdepth(subtype: str):
-    if not subtype:
-        return None
-    subtype = subtype.lower()
-    if '24' in subtype:
-        return 24
-    if '16' in subtype:
-        return 16
-    if '32' in subtype:
-        return 32
-    return None
+def analyze_file(path, plot=False):
+    data, samplerate = sf.read(path)
+    channels = data.shape[1] if len(data.shape) > 1 else 1
 
+    # Ensure 2D data for analysis
+    if channels == 1:
+        mono = data
+    else:
+        mono = np.mean(data, axis=1)
 
-def analyze_file(path: str, plot: bool = True):
-    p = Path(path)
-    y, sr = librosa.load(path, sr=None, mono=False)
-    # librosa loads as float32 normalized -1..1
+    bitdepth = guess_bit_depth(data)
 
-    # try to get file info via soundfile
-    try:
-        info = sf.info(path)
-        subtype = info.subtype
-        bitdepth = guess_bitdepth(subtype)
-        channels = info.channels
-    except Exception:
-        subtype = None
-        bitdepth = None
-        # infer channels from y
-        channels = 1 if y.ndim == 1 else y.shape[0]
+    # RMS / Peak
+    rms = 20 * np.log10(np.sqrt(np.mean(mono ** 2)) + 1e-12)
+    peak = 20 * np.log10(np.max(np.abs(mono)) + 1e-12)
 
-    # ensure mono for spectral detection
-    y_mono = ensure_mono(y)
+    # DR estimation
+    dr = estimate_dr(mono)
 
-    # compute rms and peak (in dB)
-    rms = dbfs(y_mono)
-    peak = peak_db(y_mono)
+    # Lowpass detection
+    lowpass = detect_lowpass(mono, samplerate)
 
-    # simple DR estimate: peak_db - rms_db
-    dr_est = peak - rms
-
-    # detect lowpass / fake flac
-    lp_detected, cutoff_freq, purity_score = detect_lowpass(y_mono, sr)
+    # FLAC quality score
+    flac_score = flac_integrity_score(lowpass, dr)
 
     spectrogram_path = None
     if plot:
-        out_png = Path('out') / f"{p.stem}_spectrogram.png"
-        spectrogram_path = save_spectrogram(y_mono, sr, out_png)
+        os.makedirs("out", exist_ok=True)
+        spectrogram_path = generate_spectrogram(mono, samplerate, path)
 
-    out = {
-        'path': str(p),
-        'sr': int(sr),
-        'channels': int(channels),
-        'bitdepth': int(bitdepth) if bitdepth else None,
-        'dr_est': dr_est,
-        'lowpass_detected': lp_detected,
-        'cutoff_freq': cutoff_freq,
-        'purity_score': purity_score,
-        'spectrogram_path': spectrogram_path
+    return {
+        "path": path,
+        "samplerate": int(samplerate),
+        "channels": channels,
+        "bitdepth": bitdepth,
+        "rms": float(rms),
+        "peak": float(peak),
+        "dr": float(dr),
+        "lowpass": int(lowpass) if lowpass else None,
+        "flac_score": int(flac_score),
+        "spectrogram_path": spectrogram_path,
     }
 
-    return out
+
+# -------------------------
+#  ANALYSIS UTILITIES
+# -------------------------
+
+def guess_bit_depth(data):
+    if data.dtype == np.int16:
+        return 16
+    if data.dtype == np.int32:
+        return 24
+    if data.dtype == np.float32:
+        return 24
+    return 16
+
+
+def estimate_dr(mono):
+    # DR = peak - RMS
+    peak = 20 * np.log10(np.max(np.abs(mono)) + 1e-12)
+    rms = 20 * np.log10(np.sqrt(np.mean(mono ** 2)) + 1e-12)
+    return peak - rms
+
+
+def detect_lowpass(mono, sr):
+    spectrum = np.abs(np.fft.rfft(mono))
+    freqs = np.fft.rfftfreq(len(mono), 1 / sr)
+    threshold = max(spectrum) * 0.015  # 1.5%
+
+    valid = freqs[spectrum > threshold]
+
+    if len(valid) == 0:
+        return None
+
+    limit = valid[-1]
+
+    if limit < 18000:  # typical mp3 cutoff
+        return int(limit)
+
+    return None
+
+
+def flac_integrity_score(lowpass, dr):
+    base = 100
+    if lowpass:
+        base -= 40
+    if dr < 8:
+        base -= 20
+    if dr < 5:
+        base -= 30
+    return max(0, base)
