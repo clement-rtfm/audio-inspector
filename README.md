@@ -20,13 +20,19 @@ For the English version, see [README in English](README_EN.md).
 
 ## 📦 Installation (Windows, Linux, macOS)
 
-### 1) Cloner le dépôt
+### PIP
+````bash
+pip install -i https://test.pypi.org/simple --extra-index-url https://pypi.org/simple audio-inspector==0.1.0
+````
+
+### Manuelle
+#### 1) Cloner le dépôt
 ````bash
 git clone https://github.com/clement-rtfm/audio-inspector.git
 cd audio-inspector
 ````
 
-### 🐍 2) Créer un environnement Python virtuel
+#### 🐍 2) Créer un environnement Python virtuel
 - 🔹 Linux / macOS
 ```bash
 python3 -m venv .venv
@@ -46,7 +52,7 @@ python -m venv .venv
 Vérifiez ensuite que l’environnement est actif :
 le prompt doit afficher (.venv) au début.
 
-### 📚 3) Installer les dépendances
+#### 📚 3) Installer les dépendances
 
 Si vous utilisez Linux / macOS / Windows
 ````bash
