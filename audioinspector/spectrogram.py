@@ -1,20 +1,18 @@
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import librosa
-import librosa.display
+import numpy as np
+import os
 
 
-def save_spectrogram(y, sr, outpath, n_fft=4096, hop_length=1024):
-    S = np.abs(librosa.stft(y, n_fft=n_fft, hop_length=hop_length))
-    S_db = librosa.amplitude_to_db(S, ref=np.max)
-    plt.figure(figsize=(10, 4))
-    librosa.display.specshow(S_db, sr=sr, hop_length=hop_length, x_axis='time', y_axis='hz')
-    plt.colorbar(format='%+2.0f dB')
-    plt.title('Spectrogram')
-    plt.tight_layout()
-    outpath.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(outpath, dpi=150)
+def generate_spectrogram(mono, sr, original_path):
+    name = os.path.splitext(os.path.basename(original_path))[0]
+    outfile = f"out/{name}_spectrogram.png"
+
+    plt.figure(figsize=(10, 6))
+    plt.specgram(mono, Fs=sr, NFFT=2048, noverlap=1024)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Frequency (Hz)")
+    plt.title("Spectrogram")
+    plt.savefig(outfile, dpi=200)
     plt.close()
-    return str(outpath)
+
+    return outfile
