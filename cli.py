@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 from audioinspector.analysis import analyze_file
 
-app = typer.Typer(help="Audio Inspector – analyze audio files like a pro")
+app = typer.Typer(name="audio-inspector", no_args_is_help=True)
 
 
 @app.command()
