@@ -25,75 +25,17 @@ For the English version, see [README in English](README_EN.md).
 pip install -i https://test.pypi.org/simple --extra-index-url https://pypi.org/simple audio-inspector==0.1.0
 ````
 
-### Manuelle
-#### 1) Cloner le dépôt
-````bash
-git clone https://github.com/clement-rtfm/audio-inspector.git
-cd audio-inspector
-````
-
-#### 🐍 2) Créer un environnement Python virtuel
-- 🔹 Linux / macOS
-```bash
-python3 -m venv .venv
-# puis
-source .venv/bin/activate
-```
-- 🔹 Windows (PowerShell)
-```bash
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-```
-- 🔹 Windows (CMD classique)
-````bash
-python -m venv .venv
-.\.venv\Scripts\activate.bat
-````
-Vérifiez ensuite que l’environnement est actif :
-le prompt doit afficher (.venv) au début.
-
-#### 📚 3) Installer les dépendances
-
-Si vous utilisez Linux / macOS / Windows
-````bash
-pip install --upgrade pip
-pip install -r requirements.txt
-````
-**⚠️ Dépendances système éventuellement nécessaires**
-Selon votre OS, certaines libs peuvent nécessiter des paquets additionnels :
-- Linux (Debian, Ubuntu, Mint…)
- ````bash
-sudo apt install ffmpeg libsndfile1 libasound2
-````
-- Arch / Manjaro
-````bash
-sudo pacman -S ffmpeg libsndfile alsa-lib
-````
-- Fedora
-````bash
-sudo dnf install ffmpeg libsndfile alsa-lib
-````
-- macOS (Homebrew)
-````bash
-brew install ffmpeg libsndfile
-````
-- Windows
-  Rien à installer via package manager.
-
-  ffmpeg est recommandé pour une analyse plus complète :
-  → télécharger la version Windows sur ffmpeg.org et ajouter le dossier bin/ au PATH.
-
 ---
 
 ## 🧪 Utilisation rapide
 
 ### Analyse simple
 ```bash
-python cli.py musique.flac
+audio-inspector "path/musique.flac"
 ```
 ### Analyse + export du spectrogramme
 ```bash
-python cli.py musique.flac --plot
+audio-inspector "path/musique.flac" --plot
 ```
 → génère automatiquement :
 ```bash
@@ -101,11 +43,11 @@ out/musique_spectrogram.png
 ```
 ### Analyse + export JSON (pour automatiser ou intégrer dans un script)
 ```bash
-python cli.py musique.flac --json out/rapport.json
+audio-inspector "path/musique.flac" --json out/rapport.json
 ```
 ### Tout en même temps (spectrogramme + JSON + log terminal)
 ```bash
-python cli.py musique.flac --plot --json out/rapport.json --verbose
+audio-inspector "path/musique.flac" --plot --json out/rapport.json --verbose
 ```
 
 
