@@ -20,6 +20,8 @@ Pour la version anglaise, consultez [README en anglais](README_EN.md).
 
 ## 📦 Installation
 ```bash
+# clonez le dépôt github sur l'appareil
+git clone https://github.com/clement-rtfm/audio-inspector
 # créer un environnement
 python -m venv .venv
 source .venv/bin/activate
