@@ -5,7 +5,7 @@ Analyseur audio complet : détection de faux FLAC, spectrogrammes, métriques dy
 Outil CLI conçu pour audiophiles, archivistes, collectionneurs de musique et engineers qui veulent vérifier l’authenticité et la qualité d’un fichier audio.
 
 ---
-Pour la version anglaise, consultez [README en anglais](README_EN.md).
+For the English version, see [README in English](README_EN.md).
 ---
 
 ## 🚀 Fonctionnalités principales
