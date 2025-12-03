@@ -6,7 +6,7 @@ A complete audio analysis tool: fake FLAC detection, spectrograms, dynamic metri
 A CLI tool designed for audiophiles, archivists, music collectors, and engineers who want to verify the authenticity and quality of an audio file.
 
 ---
-For the French version, see **[README in French](README.md)**.
+Pour la version française, voir **[README en français](README.md)**.
 ---
 
 ## 🚀 Main Features
